@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mescius/wijmo.react.all": "^5.20252.42",
     "@prisma/client": "^6.16.3",
     "next": "15.5.4",
     "react": "19.1.0",
