@@ -3,29 +3,45 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
-export async function GET(req: NextRequest) {
+// GET (特定のデータ)
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const orderData = await prisma.orderData.findMany();
-    return NextResponse.json(orderData);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
+    const { id } = await params;
+    const order = await prisma.orderData.findUnique({
+      where: {
+        id: parseInt(id, 10),
+      },
+    });
+    if (!order) {
       return new NextResponse(
-        JSON.stringify({ error: 'Failed to fetch order data', detail: error.message }),
+        JSON.stringify({ error: 'Order not found' }),
         { 
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-          },  
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },  
         }
       );
     }
+    return NextResponse.json(order);
+  } catch (error: unknown) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Failed to fetch order', detail: (error as Error).message }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },  
+      }
+    );
   }
 }
 
-export async function POST(req: NextRequest) {
+// PUT
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const data = await req.json();
-    const newOrder = await prisma.orderData.create({
+    const updatedOrder = await prisma.orderData.update({
+      where: {
+        id: parseInt(id, 10),
+      },
       data: {
         product: data.product,
         quantity: data.quantity,
@@ -33,18 +49,35 @@ export async function POST(req: NextRequest) {
         orderdate: new Date(data.orderdate),
       },
     });
-    return NextResponse.json(newOrder);
+    return NextResponse.json(updatedOrder);
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Failed to create order', detail: error.message }),
-        { 
-          status: 500,
-          headers: {
-            'Content-Type': 'application/json',
-          },  
-        }
-      );
-    }
+    return new NextResponse(
+      JSON.stringify({ error: 'Failed to update order', detail: (error as Error).message }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },  
+      }
+    );
+  }
+}
+
+// DELETE
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const deletedOrder = await prisma.orderData.delete({
+      where: {
+        id: parseInt(id, 10),
+      },
+    });
+    return NextResponse.json(deletedOrder);
+  } catch (error: unknown) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Failed to delete order', detail: (error as Error).message }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },  
+      }
+    );
   }
 }
